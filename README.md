@@ -66,7 +66,6 @@ Much Value
 
 ## Development
 
-API docs can be found [here](http://godoc.org/github.com/muesli/thunder).
-
+[![GoDoc](https://godoc.org/github.com/golang/gddo?status.svg)](https://godoc.org/github.com/muesli/thunder)
 [![Build Status](https://travis-ci.org/muesli/thunder.svg?branch=master)](https://travis-ci.org/muesli/thunder)
 [![Go ReportCard](http://goreportcard.com/badge/muesli/thunder)](http://goreportcard.com/report/muesli/thunder)
