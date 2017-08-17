@@ -21,10 +21,12 @@ Type "help" for help.
 [somebolt.db] # ls
 OneBucket/
 AnotherBucket/
+2 keys in bucket
 
 [somebolt.db] # ls OneBucket/
 SubBucket/
 SomeKey
+2 keys in bucket
 
 [somebolt.db] # get OneBucket/SomeKey
 Much Value
