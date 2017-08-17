@@ -18,24 +18,24 @@ $ thunder somebolt.db
 Thunder, Bolt's Interactive Shell
 Type "help" for help.
 
-[somebolt.db] # ls
+[somebolt.db /] # ls
 OneBucket/
 AnotherBucket/
 2 keys in bucket
 
-[somebolt.db] # ls OneBucket/
+[somebolt.db /] # ls OneBucket/
 SubBucket/
 SomeKey
 2 keys in bucket
 
-[somebolt.db] # get OneBucket/SomeKey
+[somebolt.db /] # get OneBucket/SomeKey
 Much Value
 
-[somebolt.db] # put OneBucket/SomeKey "Different Value"
-[somebolt.db] # rm OneBucket/SomeKey
-[somebolt.db] # mkdir AnotherBucket/NewBucket
-[somebolt.db] # cd AnotherBucket/NewBucket
-[somebolt.db] # put NewKey "Newest Value"
+[somebolt.db /] # put OneBucket/SomeKey "Different Value"
+[somebolt.db /] # rm OneBucket/SomeKey
+[somebolt.db /] # mkdir AnotherBucket/NewBucket
+[somebolt.db /] # cd AnotherBucket/NewBucket
+[somebolt.db /AnotherBucket/NewBucket] # put NewKey "Newest Value"
 ...
 ```
 
