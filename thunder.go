@@ -13,13 +13,20 @@ import (
 	"os"
 	"strings"
 	"time"
+	"unicode"
 
 	"github.com/boltdb/bolt"
 	"github.com/chzyer/readline"
 	"github.com/muesli/ishell"
 )
 
-var cwd Bucket
+var (
+	shell *ishell.Shell
+	cwd   Bucket
+
+	promptFmt = "[%s %s] # "
+	fname     string
+)
 
 func main() {
 	flag.Parse()
@@ -29,7 +36,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	fname := args[0]
+	fname = args[0]
 	db, err := open(fname)
 	if err != nil {
 		fmt.Println(err)
@@ -40,8 +47,8 @@ func main() {
 	err = db.Update(func(tx *bolt.Tx) error {
 		cwd = NewRootBucket(tx)
 
-		prompt := fmt.Sprintf("[%s] # ", fname)
-		shell := ishell.NewWithConfig(&readline.Config{Prompt: prompt})
+		prompt := fmt.Sprintf(promptFmt, fname, cwd.String())
+		shell = ishell.NewWithConfig(&readline.Config{Prompt: prompt})
 		shell.Interrupt(interruptHandler)
 		shell.SetHomeHistoryPath(".thunder_history")
 		shell.Println("Thunder, Bolt's Interactive Shell")
@@ -135,7 +142,7 @@ func bucketCompleter(args []string, current string) []string {
 		return []string{}
 	}
 
-	rval := target.Buckets(true)
+	rval := printableList(target.Buckets(true))
 	for i, v := range rval {
 		rval[i] = bucketName + v
 	}
@@ -148,7 +155,7 @@ func keyCompleter(args []string, current string) []string {
 		return []string{}
 	}
 
-	rval := target.List()
+	rval := printableList(target.List())
 	for i, v := range rval {
 		rval[i] = bucketName + v
 	}
@@ -163,9 +170,17 @@ func lsCmd(c *ishell.Context) {
 
 	if target != nil {
 		contents := target.List()
-		for _, entry := range contents {
+		entries := printableList(contents)
+		for _, entry := range entries {
 			c.Println(entry)
 		}
+
+		footnote := ""
+		omitted := len(contents) - len(entries)
+		if omitted > 0 {
+			footnote = fmt.Sprintf(" (%d omitted in this list)", omitted)
+		}
+		c.Printf("%d keys in bucket%s\n", len(contents), footnote)
 	} else {
 		c.Printf("'%s' is not a bucket\n", c.Args[0])
 	}
@@ -221,7 +236,9 @@ func cdCmd(c *ishell.Context) {
 			rval = curr
 		}
 	}
+
 	cwd = rval
+	shell.SetPrompt(fmt.Sprintf(promptFmt, fname, cwd.String()))
 }
 
 func mkdirCmd(c *ishell.Context) {
@@ -289,4 +306,25 @@ func open(fname string) (*bolt.DB, error) {
 	}
 
 	return db, nil
+}
+
+func isPrintable(s string) bool {
+	for _, r := range s {
+		if !unicode.IsGraphic(r) {
+			return false
+		}
+	}
+
+	return true
+}
+
+func printableList(s []string) []string {
+	r := []string{}
+	for _, v := range s {
+		if isPrintable(v) {
+			r = append(r, v)
+		}
+	}
+
+	return r
 }

@@ -175,10 +175,6 @@ func list(curr *bolt.Cursor) []string {
 	var rval []string
 	for k, v := curr.First(); k != nil; k, v = curr.Next() {
 		val := string(k)
-		if !isPrintable(val) {
-			continue
-		}
-
 		if v == nil {
 			rval = append(rval, val+"/")
 		} else {
@@ -195,9 +191,6 @@ func buckets(curr *bolt.Cursor, withTrailingSlash bool) []string {
 			continue
 		}
 		bk := string(k)
-		if !isPrintable(bk) {
-			continue
-		}
 		if withTrailingSlash {
 			bk += "/"
 		}
