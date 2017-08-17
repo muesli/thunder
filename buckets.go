@@ -9,7 +9,6 @@ package main
 
 import (
 	"fmt"
-	"unicode"
 
 	"github.com/boltdb/bolt"
 )
@@ -41,6 +40,9 @@ type Bucket interface {
 
 	// Rm removes a bucket or value with the given key.
 	Rm(key string)
+
+	// Returns the full path of the bucket
+	String() string
 }
 
 type RootBucket struct {
@@ -59,7 +61,7 @@ func (rl *RootBucket) Cd(key string) Bucket {
 	var rval Bucket
 	nested := rl.tx.Bucket([]byte(key))
 	if nested != nil {
-		rval = &SubBucket{nested, rl}
+		rval = &SubBucket{nested, "/" + key, rl}
 	}
 	return rval
 }
@@ -96,8 +98,13 @@ func (rl *RootBucket) Rm(key string) {
 	}
 }
 
+func (rl *RootBucket) String() string {
+	return "/"
+}
+
 type SubBucket struct {
 	b    *bolt.Bucket
+	path string
 	prev Bucket
 }
 
@@ -109,7 +116,7 @@ func (bl *SubBucket) Cd(key string) Bucket {
 	var rval Bucket
 	nested := bl.b.Bucket([]byte(key))
 	if nested != nil {
-		rval = &SubBucket{nested, bl}
+		rval = &SubBucket{nested, bl.path + "/" + key, bl}
 	}
 	return rval
 }
@@ -160,14 +167,8 @@ func (bl *SubBucket) Rm(key string) {
 	}
 }
 
-func isPrintable(s string) bool {
-	for _, r := range s {
-		if !unicode.IsGraphic(r) {
-			return false
-		}
-	}
-
-	return true
+func (bl *SubBucket) String() string {
+	return bl.path
 }
 
 func list(curr *bolt.Cursor) []string {
