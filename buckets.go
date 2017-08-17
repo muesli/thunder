@@ -15,7 +15,7 @@ import (
 
 type Bucket interface {
 	// Prev returns the parent of this Bucket.
-	// Retuns nil if this Bucket is root.
+	// Returns nil if this Bucket is root.
 	Prev() Bucket
 
 	// Cd changes the current Bucket to the bucket stored under key.
