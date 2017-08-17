@@ -42,5 +42,4 @@ Much Value
 API docs can be found [here](http://godoc.org/github.com/muesli/thunder).
 
 [![Build Status](https://secure.travis-ci.org/muesli/thunder.png)](http://travis-ci.org/muesli/thunder)
-[![Coverage Status](https://coveralls.io/repos/github/muesli/thunder/badge.svg?branch=master)](https://coveralls.io/github/muesli/thunder?branch=master)
 [![Go ReportCard](http://goreportcard.com/badge/muesli/thunder)](http://goreportcard.com/report/muesli/thunder)
