@@ -143,6 +143,14 @@ func partialBucketString(s string) (Bucket, string) {
 	return cwd, ""
 }
 
+func prefixBucket(s []string, name string) []string {
+	for i, v := range s {
+		s[i] = name + v
+	}
+
+	return s
+}
+
 func bucketCompleter(args []string, current string) []string {
 	target, bucketName := partialBucketString(current)
 	if target == nil {
@@ -150,10 +158,7 @@ func bucketCompleter(args []string, current string) []string {
 	}
 
 	rval := printableList(target.Buckets(true))
-	for i, v := range rval {
-		rval[i] = bucketName + v
-	}
-	return rval
+	return prefixBucket(rval, bucketName)
 }
 
 func keyCompleter(args []string, current string) []string {
@@ -163,10 +168,7 @@ func keyCompleter(args []string, current string) []string {
 	}
 
 	rval := printableList(target.List())
-	for i, v := range rval {
-		rval[i] = bucketName + v
-	}
-	return rval
+	return prefixBucket(rval, bucketName)
 }
 
 func lsCmd(c *ishell.Context) {
