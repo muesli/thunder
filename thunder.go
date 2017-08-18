@@ -8,6 +8,7 @@
 package main
 
 import (
+	"errors"
 	"flag"
 	"fmt"
 	"os"
@@ -177,52 +178,61 @@ func lsCmd(c *ishell.Context) {
 		target = travel(target, c.Args[0])
 	}
 
-	if target != nil {
-		contents := target.List()
-		entries := printableList(contents)
-		for _, entry := range entries {
-			c.Println(entry)
-		}
-
-		footnote := ""
-		omitted := len(contents) - len(entries)
-		if omitted > 0 {
-			footnote = fmt.Sprintf(" (%d omitted in this list)", omitted)
-		}
-		c.Printf("%d keys in bucket%s\n", len(contents), footnote)
-	} else {
-		c.Printf("'%s' is not a bucket\n", c.Args[0])
+	if target == nil {
+		c.Err(fmt.Errorf("'%s' is not a bucket", c.Args[0]))
+		return
 	}
+
+	contents := target.List()
+	entries := printableList(contents)
+	for _, entry := range entries {
+		c.Println(entry)
+	}
+
+	footnote := ""
+	omitted := len(contents) - len(entries)
+	if omitted > 0 {
+		footnote = fmt.Sprintf(" (%d omitted in this list)", omitted)
+	}
+	c.Printf("%d keys in bucket%s\n", len(contents), footnote)
 }
 
 func getCmd(c *ishell.Context) {
 	if len(c.Args) < 1 {
-		c.Println("Missing key")
-	} else {
-		target, key := parseKeyPath(cwd, c.Args[0])
-		var data []byte
-		if target != nil {
-			data = target.Get(key)
-		}
-		if data == nil {
-			c.Printf("No data at key %s\n", key)
-		} else {
-			fmt.Printf("%s\n", string(data))
-		}
+		c.Err(errors.New("get: missing key name"))
+		return
 	}
+
+	var data []byte
+	target, key := parseKeyPath(cwd, c.Args[0])
+	if target != nil {
+		data = target.Get(key)
+	}
+	if data == nil {
+		c.Err(fmt.Errorf("No data at key '%s'", key))
+		return
+	}
+
+	c.Println(string(data))
 }
 
 func putCmd(c *ishell.Context) {
-	if len(c.Args) < 2 {
-		fmt.Println("Missing key or value")
-	} else {
-		target, key := parseKeyPath(cwd, c.Args[0])
-		if target == nil {
-			fmt.Printf("Unable to set '%s' for key '%s'\n", c.Args[1], c.Args[0])
-		} else {
-			target.Put(key, c.Args[1])
-		}
+	switch len(c.Args) {
+	case 0:
+		c.Err(errors.New("put: missing key name and value"))
+		return
+	case 1:
+		c.Err(errors.New("put: missing value"))
+		return
 	}
+
+	target, key := parseKeyPath(cwd, c.Args[0])
+	if target == nil {
+		c.Err(fmt.Errorf("Unable to set '%s' for key '%s'", c.Args[1], c.Args[0]))
+		return
+	}
+
+	c.Err(target.Put(key, c.Args[1]))
 }
 
 func cdCmd(c *ishell.Context) {
@@ -239,7 +249,7 @@ func cdCmd(c *ishell.Context) {
 		path := c.Args[0]
 		curr := travel(cwd, path)
 		if curr == nil {
-			c.Printf("Unable to change to bucket '%s'\n", path)
+			c.Err(fmt.Errorf("Unable to change to bucket '%s'", path))
 			rval = cwd
 		} else {
 			rval = curr
@@ -252,28 +262,32 @@ func cdCmd(c *ishell.Context) {
 
 func mkdirCmd(c *ishell.Context) {
 	if len(c.Args) < 1 {
-		fmt.Printf("Mkdir command must specify key\n")
-	} else {
-		target, key := parseKeyPath(cwd, c.Args[0])
-		if target == nil {
-			fmt.Printf("Unable to create bucket at path %v\n", c.Args[0])
-		} else {
-			target.Mkdir(key)
-		}
+		c.Err(errors.New("mkdir: missing bucket name"))
+		return
 	}
+
+	target, key := parseKeyPath(cwd, c.Args[0])
+	if target == nil {
+		c.Err(fmt.Errorf("Unable to create bucket at path '%v'", c.Args[0]))
+		return
+	}
+
+	c.Err(target.Mkdir(key))
 }
 
 func rmCmd(c *ishell.Context) {
 	if len(c.Args) < 1 {
-		fmt.Printf("Rm command must specify key\n")
-	} else {
-		target, key := parseKeyPath(cwd, c.Args[0])
-		if target == nil {
-			fmt.Printf("Unable to delete value at path %v\n", c.Args[0])
-		} else {
-			target.Rm(key)
-		}
+		c.Err(errors.New("rm: missing bucket or key name"))
+		return
 	}
+
+	target, key := parseKeyPath(cwd, c.Args[0])
+	if target == nil {
+		c.Err(fmt.Errorf("Unable to delete value at path '%v'", c.Args[0]))
+		return
+	}
+
+	c.Err(target.Rm(key))
 }
 
 func travel(cwd Bucket, path string) Bucket {
