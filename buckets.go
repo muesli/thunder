@@ -14,6 +14,15 @@ import (
 	"github.com/boltdb/bolt"
 )
 
+var (
+	// ErrNoSuchBucket gets returned when accessing a non-existing bucket
+	ErrNoSuchBucket = errors.New("no such bucket")
+	// ErrNoKeysAtRoot gets returned when accessing a root-bucket key
+	ErrNoKeysAtRoot = errors.New("cannot store values at root bucket")
+	// ErrNoSuchKey gets returned when accessing a non-existing key
+	ErrNoSuchKey = errors.New("no such key")
+)
+
 // Bucket is an interface to Bolt's buckets
 type Bucket interface {
 	// Prev returns the parent of this Bucket.
@@ -21,7 +30,7 @@ type Bucket interface {
 	Prev() Bucket
 
 	// Cd changes the current Bucket to the bucket stored under key.
-	Cd(key string) Bucket
+	Cd(key string) (Bucket, error)
 
 	// List returns keys for all values and buckets in this bucket.
 	// Bucket keys are suffixed with a slash.
@@ -32,7 +41,7 @@ type Bucket interface {
 	Buckets(withTrailingSlash bool) []string
 
 	// Get returns a value for a key or nil if none found.
-	Get(key string) []byte
+	Get(key string) ([]byte, error)
 
 	// Put stores a value at the given key.
 	Put(key, value string) error
@@ -63,12 +72,12 @@ func (rl *RootBucket) Prev() Bucket {
 	return nil
 }
 
-func (rl *RootBucket) Cd(key string) Bucket {
+func (rl *RootBucket) Cd(key string) (Bucket, error) {
 	b := rl.tx.Bucket([]byte(key))
 	if b == nil {
-		return nil
+		return rl, ErrNoSuchBucket
 	}
-	return &SubBucket{b, "/" + key, rl}
+	return &SubBucket{b, "/" + key, rl}, nil
 }
 
 func (rl *RootBucket) List() []string {
@@ -81,18 +90,18 @@ func (rl *RootBucket) Buckets(withTrailingSlash bool) []string {
 	return buckets(c, withTrailingSlash)
 }
 
-func (rl *RootBucket) Get(key string) []byte {
-	return nil
+func (rl *RootBucket) Get(key string) ([]byte, error) {
+	return nil, ErrNoKeysAtRoot
 }
 
 func (rl *RootBucket) Put(key, value string) error {
-	return errors.New("Cannot store values at root bucket")
+	return ErrNoKeysAtRoot
 }
 
 func (rl *RootBucket) Mkdir(key string) error {
 	_, err := rl.tx.CreateBucket([]byte(key))
 	if err != nil {
-		return fmt.Errorf("Unable to create bucket at key '%v': %v", key, err)
+		return fmt.Errorf("unable to create bucket at key '%v': %v", key, err)
 	}
 	return nil
 }
@@ -100,7 +109,7 @@ func (rl *RootBucket) Mkdir(key string) error {
 func (rl *RootBucket) Rm(key string) error {
 	err := rl.tx.DeleteBucket([]byte(key))
 	if err != nil {
-		return fmt.Errorf("Unable to delete bucket at key '%v': %v", key, err)
+		return fmt.Errorf("unable to delete bucket at key '%v': %v", key, err)
 	}
 	return nil
 }
@@ -120,12 +129,15 @@ func (bl *SubBucket) Prev() Bucket {
 	return bl.prev
 }
 
-func (bl *SubBucket) Cd(key string) Bucket {
+func (bl *SubBucket) Cd(key string) (Bucket, error) {
 	b := bl.b.Bucket([]byte(key))
 	if b == nil {
-		return nil
+		if _, err := bl.Get(key); err == nil {
+			return bl, errors.New("key is a value, not a bucket")
+		}
+		return bl, ErrNoSuchBucket
 	}
-	return &SubBucket{b, bl.path + "/" + key, bl}
+	return &SubBucket{b, bl.path + "/" + key, bl}, nil
 }
 
 func (bl *SubBucket) List() []string {
@@ -138,14 +150,24 @@ func (bl *SubBucket) Buckets(withTrailingSlash bool) []string {
 	return buckets(curr, withTrailingSlash)
 }
 
-func (bl *SubBucket) Get(key string) []byte {
-	return bl.b.Get([]byte(key))
+func (bl *SubBucket) Get(key string) ([]byte, error) {
+	b := bl.b.Get([]byte(key))
+
+	if b == nil {
+		bucket := bl.b.Bucket([]byte(key))
+		if bucket != nil {
+			return nil, errors.New("key is a bucket, not a value")
+		}
+		return nil, ErrNoSuchKey
+	}
+
+	return b, nil
 }
 
 func (bl *SubBucket) Put(key, value string) error {
 	err := bl.b.Put([]byte(key), []byte(value))
 	if err != nil {
-		return fmt.Errorf("Unable to store '%v' at '%v': %v", value, key, err)
+		return fmt.Errorf("unable to store '%v' at '%v': %v", value, key, err)
 	}
 	return nil
 }
@@ -153,7 +175,7 @@ func (bl *SubBucket) Put(key, value string) error {
 func (bl *SubBucket) Mkdir(key string) error {
 	_, err := bl.b.CreateBucket([]byte(key))
 	if err != nil {
-		return fmt.Errorf("Unable to create bucket at key '%v': %v", key, err)
+		return fmt.Errorf("unable to create bucket at key '%v': %v", key, err)
 	}
 	return nil
 }
@@ -172,7 +194,7 @@ func (bl *SubBucket) Rm(key string) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("Unable to delete '%v': %v", key, err)
+		return fmt.Errorf("unable to delete '%v': %v", key, err)
 	}
 	return nil
 }
