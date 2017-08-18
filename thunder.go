@@ -50,6 +50,7 @@ func main() {
 		prompt := fmt.Sprintf(promptFmt, fname, cwd.String())
 		shell = ishell.NewWithConfig(&readline.Config{Prompt: prompt})
 		shell.Interrupt(interruptHandler)
+		shell.EOF(eofHandler)
 		shell.SetHomeHistoryPath(".thunder_history")
 		shell.Println("Thunder, Bolt's Interactive Shell")
 		shell.Println("Type \"help\" for help.")
@@ -124,6 +125,12 @@ func interruptHandler(c *ishell.Context, count int, line string) {
 	c.Println("Press Ctrl-C once more to exit")
 }
 
+func eofHandler(c *ishell.Context) {
+	os.Exit(0)
+}
+
+// extracts the last valid part of a Bucket key
+// "/foo/ba" -> "/foo/"
 func partialBucketString(s string) (Bucket, string) {
 	a := strings.Split(s, "/")
 	if len(a) > 0 {

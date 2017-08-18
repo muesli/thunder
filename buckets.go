@@ -41,7 +41,7 @@ type Bucket interface {
 	// Rm removes a bucket or value with the given key.
 	Rm(key string)
 
-	// Returns the full path of the bucket
+	// Returns the full path of the bucket.
 	String() string
 }
 
