@@ -25,7 +25,9 @@ func travel(cwd Bucket, path string) (Bucket, error) {
 
 		part := parts[i]
 		if part == ".." {
-			cwd = cwd.Prev()
+			if cwd.Prev() != nil {
+				cwd = cwd.Prev()
+			}
 		} else if part != "." {
 			cwd, err = cwd.Cd(part)
 		}

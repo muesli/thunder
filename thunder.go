@@ -143,17 +143,20 @@ func open(fname string) (*bolt.DB, error) {
 
 // extracts the last valid part of a Bucket key
 // "/foo/ba" -> "/foo/"
-func partialBucketString(s string) (Bucket, string) {
+func partialBucketString(s string) (Bucket, string, error) {
 	a := strings.Split(s, "/")
 	if len(a) > 0 {
 		a = a[:len(a)-1]
 	}
 	if len(a) > 0 {
-		b, _ := travel(cwd, strings.Join(a, "/"))
-		return b, strings.Join(a, "/") + "/"
+		b, err := travel(cwd, strings.Join(a, "/"))
+		if err != nil {
+			return b, "", err
+		}
+		return b, strings.Join(a, "/") + "/", nil
 	}
 
-	return cwd, ""
+	return cwd, "", nil
 }
 
 func prefixBucket(s []string, name string) []string {
@@ -165,8 +168,8 @@ func prefixBucket(s []string, name string) []string {
 }
 
 func bucketCompleter(args []string, current string) []string {
-	target, bucketName := partialBucketString(current)
-	if target == nil {
+	target, bucketName, err := partialBucketString(current)
+	if err != nil {
 		return []string{}
 	}
 
@@ -175,8 +178,8 @@ func bucketCompleter(args []string, current string) []string {
 }
 
 func keyCompleter(args []string, current string) []string {
-	target, bucketName := partialBucketString(current)
-	if target == nil {
+	target, bucketName, err := partialBucketString(current)
+	if err != nil {
 		return []string{}
 	}
 
