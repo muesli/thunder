@@ -40,7 +40,7 @@ type Bucket interface {
 	// Bucket keys are suffixed with a slash if withTrailingSlash is true.
 	Buckets(withTrailingSlash bool) []string
 
-	// Get returns a value for a key or nil if none found.
+	// Get returns a value for a key.
 	Get(key string) ([]byte, error)
 
 	// Put stores a value at the given key.
@@ -72,6 +72,7 @@ func (rl *RootBucket) Prev() Bucket {
 	return nil
 }
 
+// Cd changes scope to another bucket
 func (rl *RootBucket) Cd(key string) (Bucket, error) {
 	b := rl.tx.Bucket([]byte(key))
 	if b == nil {
@@ -80,24 +81,29 @@ func (rl *RootBucket) Cd(key string) (Bucket, error) {
 	return &SubBucket{b, "/" + key, rl}, nil
 }
 
+// List returns all keys in this bucket
 func (rl *RootBucket) List() []string {
 	c := rl.tx.Cursor()
 	return list(c)
 }
 
+// Buckets returns all sub-buckets in this bucket
 func (rl *RootBucket) Buckets(withTrailingSlash bool) []string {
 	c := rl.tx.Cursor()
 	return buckets(c, withTrailingSlash)
 }
 
+// Get returns the value of a key
 func (rl *RootBucket) Get(key string) ([]byte, error) {
 	return nil, ErrNoKeysAtRoot
 }
 
+// Put sets the value of a key
 func (rl *RootBucket) Put(key, value string) error {
 	return ErrNoKeysAtRoot
 }
 
+// Mkdir creates a new sub-bucket
 func (rl *RootBucket) Mkdir(key string) error {
 	_, err := rl.tx.CreateBucket([]byte(key))
 	if err != nil {
@@ -106,6 +112,7 @@ func (rl *RootBucket) Mkdir(key string) error {
 	return nil
 }
 
+// Rm deletes a key
 func (rl *RootBucket) Rm(key string) error {
 	err := rl.tx.DeleteBucket([]byte(key))
 	if err != nil {
@@ -125,10 +132,12 @@ type SubBucket struct {
 	prev Bucket
 }
 
+// Prev returns the parent bucket
 func (bl *SubBucket) Prev() Bucket {
 	return bl.prev
 }
 
+// Cd changes scope to another bucket
 func (bl *SubBucket) Cd(key string) (Bucket, error) {
 	b := bl.b.Bucket([]byte(key))
 	if b == nil {
@@ -140,16 +149,19 @@ func (bl *SubBucket) Cd(key string) (Bucket, error) {
 	return &SubBucket{b, bl.path + "/" + key, bl}, nil
 }
 
+// List returns all keys in this bucket
 func (bl *SubBucket) List() []string {
 	curr := bl.b.Cursor()
 	return list(curr)
 }
 
+// Buckets returns all sub-buckets in this bucket
 func (bl *SubBucket) Buckets(withTrailingSlash bool) []string {
 	curr := bl.b.Cursor()
 	return buckets(curr, withTrailingSlash)
 }
 
+// Get returns the value of a key
 func (bl *SubBucket) Get(key string) ([]byte, error) {
 	b := bl.b.Get([]byte(key))
 
@@ -164,6 +176,7 @@ func (bl *SubBucket) Get(key string) ([]byte, error) {
 	return b, nil
 }
 
+// Put sets the value of a key
 func (bl *SubBucket) Put(key, value string) error {
 	err := bl.b.Put([]byte(key), []byte(value))
 	if err != nil {
@@ -172,6 +185,7 @@ func (bl *SubBucket) Put(key, value string) error {
 	return nil
 }
 
+// Mkdir creates a new sub-bucket
 func (bl *SubBucket) Mkdir(key string) error {
 	_, err := bl.b.CreateBucket([]byte(key))
 	if err != nil {
@@ -180,6 +194,7 @@ func (bl *SubBucket) Mkdir(key string) error {
 	return nil
 }
 
+// Rm deletes a key
 func (bl *SubBucket) Rm(key string) error {
 	keyBytes := []byte(key)
 	c := bl.b.Cursor()
