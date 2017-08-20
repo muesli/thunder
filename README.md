@@ -18,6 +18,12 @@ $ thunder somebolt.db
 Thunder, Bolt's Interactive Shell
 Type "help" for help.
 
+[somebolt.db /] #
+```
+
+### List keys in a bucket
+
+```
 [somebolt.db /] # ls
 OneBucket/
 AnotherBucket/
@@ -27,16 +33,34 @@ AnotherBucket/
 SubBucket/
 SomeKey
 2 keys in bucket
+```
 
+### Get the value of a key
+
+```
 [somebolt.db /] # get OneBucket/SomeKey
 Much Value
+```
 
+### Set/change the value of a key
+```
 [somebolt.db /] # put OneBucket/SomeKey "Different Value"
+```
+
+### Delete a value or bucket
+```
 [somebolt.db /] # rm OneBucket/SomeKey
+[somebolt.db /] # rm OneBucket/SubBucket
+```
+
+### Create a new bucket
+```
 [somebolt.db /] # mkdir AnotherBucket/NewBucket
+```
+
+### Change scope to a different bucket
+```
 [somebolt.db /] # cd AnotherBucket/NewBucket
-[somebolt.db /AnotherBucket/NewBucket] # put NewKey "Newest Value"
-...
 ```
 
 ## Development
