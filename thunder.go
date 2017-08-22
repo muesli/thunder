@@ -122,11 +122,11 @@ func interruptHandler(c *ishell.Context, count int, line string) {
 		c.Println("Interrupted")
 		os.Exit(1)
 	}
-	c.Println("Press Ctrl-C once more to exit")
+	c.Println("Press Ctrl-C once more to exit without saving the database")
 }
 
 func eofHandler(c *ishell.Context) {
-	os.Exit(0)
+	shell.Close()
 }
 
 func open(fname string) (*bolt.DB, error) {
