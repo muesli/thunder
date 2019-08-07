@@ -22,6 +22,10 @@ matrix:
     - os: osx
       go: 1.6.x
 
+env:
+  global:
+    GO111MODULE=on
+
 notifications:
   email:
     on_success: change
