@@ -5,7 +5,7 @@ BoltDB's Interactive Shell
 
 ## Installation
 
-Make sure you have a working Go environment (Go 1.4 or higher is required).
+Make sure you have a working Go environment (Go 1.6 or higher is required).
 See the [install instructions](http://golang.org/doc/install.html).
 
 To install Thunder, simply run:
