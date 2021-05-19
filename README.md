@@ -6,7 +6,7 @@ BoltDB's Interactive Shell
 ## Installation
 
 Make sure you have a working Go environment (Go 1.6 or higher is required).
-See the [install instructions](http://golang.org/doc/install.html).
+See the [install instructions](https://golang.org/doc/install.html).
 
 To install Thunder, simply run:
 
@@ -68,4 +68,4 @@ Much Value
 
 [![GoDoc](https://godoc.org/github.com/golang/gddo?status.svg)](https://godoc.org/github.com/muesli/thunder)
 [![Build Status](https://travis-ci.org/muesli/thunder.svg?branch=master)](https://travis-ci.org/muesli/thunder)
-[![Go ReportCard](http://goreportcard.com/badge/muesli/thunder)](http://goreportcard.com/report/muesli/thunder)
+[![Go ReportCard](https://goreportcard.com/badge/muesli/thunder)](https://goreportcard.com/report/muesli/thunder)
